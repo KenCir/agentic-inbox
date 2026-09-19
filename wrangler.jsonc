@@ -5,14 +5,17 @@
   "main": "./workers/app.ts",
   "observability": {
     "enabled": true,
+    "redact_query_string": false,
   },
   "compatibility_flags": ["nodejs_compat"],
+  "assets": {},
   "vars": {
     // Production deploys must also define POLICY_AUD and TEAM_DOMAIN.
     // TEAM_DOMAIN may be the base Access URL or the full /cdn-cgi/access/certs URL.
     // The worker now fails closed outside local development if Access is not configured.
     "DOMAINS": "kencir.blog",
     "EMAIL_ADDRESSES": [],
+    "name": "EMAIL_ADDRESSES",
   },
   "send_email": [
     {
@@ -24,7 +27,6 @@
     {
       "binding": "BUCKET",
       "bucket_name": "agentic-inbox",
-      "preview_bucket_name": "agentic-inbox",
     },
   ],
   "ai": {
@@ -60,4 +62,13 @@
       "new_sqlite_classes": ["EmailMCP"],
     },
   ],
+  "routes": [
+    {
+      "pattern": "agentic-inbox.kencir.blog",
+      "zone_name": "kencir.blog",
+      "custom_domain": true,
+    },
+  ],
+  "preview_urls": false,
+  "workers_dev": true,
 }

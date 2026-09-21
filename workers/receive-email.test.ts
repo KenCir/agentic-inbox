@@ -73,11 +73,10 @@ describe("receiveEmail mailbox routing", () => {
 			});
 			expect(attachments).toEqual([]);
 			expect(env.BUCKET.put).not.toHaveBeenCalled();
-			expect(env.EMAIL_AGENT.idFromName).toHaveBeenCalledExactlyOnceWith("inbox@example.com");
-			expect(env.EMAIL_AGENT.get).toHaveBeenCalledExactlyOnceWith("inbox@example.com");
-			expect(ctx.waitUntil).toHaveBeenCalledOnce();
-			expect(agent.fetch).toHaveBeenCalledOnce();
-			expect(await agent.fetch.mock.calls[0][0].json()).toMatchObject({ mailboxId: "inbox@example.com" });
+			expect(env.EMAIL_AGENT.idFromName).not.toHaveBeenCalled();
+			expect(env.EMAIL_AGENT.get).not.toHaveBeenCalled();
+			expect(ctx.waitUntil).not.toHaveBeenCalled();
+			expect(agent.fetch).not.toHaveBeenCalled();
 		},
 	);
 
@@ -85,12 +84,15 @@ describe("receiveEmail mailbox routing", () => {
 		{ label: "unset", allowedAddresses: undefined },
 		{ label: "matching", allowedAddresses: ["inbox@example.com"] },
 	])("preserves direct delivery with $label allowlist", async ({ allowedAddresses }) => {
-		const { env, mailbox, receive } = bindings(allowedAddresses);
+		const { env, ctx, mailbox, agent, receive } = bindings(allowedAddresses);
 		await receive(emailEvent("inbox@example.com", "Inbox <inbox@example.com>"));
 		expect(env.BUCKET.head).toHaveBeenCalledExactlyOnceWith("mailboxes/inbox@example.com.json");
 		expect(env.MAILBOX.idFromName).toHaveBeenCalledExactlyOnceWith("inbox@example.com");
 		expect(mailbox.createEmail).toHaveBeenCalledOnce();
 		expect(mailbox.createEmail.mock.calls[0][1].recipient).toBe("inbox@example.com");
+		expect(env.EMAIL_AGENT.get).not.toHaveBeenCalled();
+		expect(ctx.waitUntil).not.toHaveBeenCalled();
+		expect(agent.fetch).not.toHaveBeenCalled();
 	});
 
 	it("does not fall back to an allowed RFC To recipient", async () => {
